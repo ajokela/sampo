@@ -52,7 +52,13 @@ sampo/
 ├── semu/              # Sampo Emulator
 │   └── src/
 │       ├── main.rs    # CLI entry point
-│       └── cpu.rs     # CPU emulation core
+│       ├── cpu.rs     # CPU emulation core
+│       └── tui.rs     # TUI interface
+├── rtl/               # Amaranth HDL implementation
+│   ├── cpu.py         # CPU core
+│   ├── alu.py         # ALU module
+│   ├── decode.py      # Instruction decoder
+│   └── soc.py         # System-on-Chip
 └── examples/          # Example programs
     └── hello.s        # Hello world
 ```
@@ -101,6 +107,27 @@ semu --help                      # Show help
 - `m`, `mem` - Dump memory at PC
 - `q`, `quit` - Exit
 - `h`, `help` - Show commands
+
+### TUI Mode
+
+The emulator includes a rich terminal user interface:
+
+```bash
+semu program.bin --tui
+```
+
+![Sampo Emulator TUI](sampo-emulator.png)
+
+**TUI Controls:**
+| Key | Action |
+|-----|--------|
+| F5 | Run continuously |
+| F6 | Step one instruction |
+| F7 | Pause execution |
+| F8 | Reset CPU |
+| F9/F10 | Memory view up/down |
+| PgUp/PgDn | Memory view ±256 bytes |
+| F12 | Quit |
 
 ## Example
 
