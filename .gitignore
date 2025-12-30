@@ -14,3 +14,11 @@ CLAUDE.md
 
 # Generated binaries
 *.bin
+tinycomputers.io
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+*.vcd

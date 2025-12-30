@@ -1,0 +1,21 @@
+[project]
+name = "sampo-rtl"
+version = "0.1.0"
+description = "Sampo CPU RTL implementation in Amaranth"
+requires-python = ">=3.10"
+dependencies = [
+    "amaranth>=0.5",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+boards = [
+    "amaranth-boards>=0.1",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0",
+]
