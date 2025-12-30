@@ -3,9 +3,10 @@
 
 use std::env;
 use std::fs;
-use std::io::{self, Read, Write};
+use std::io::{self, Write};
 
 mod cpu;
+mod tui;
 
 use cpu::Cpu;
 
@@ -26,6 +27,7 @@ fn main() {
     let input_file = &args[1];
     let trace = args.iter().any(|a| a == "-t" || a == "--trace");
     let interactive = args.iter().any(|a| a == "-i" || a == "--interactive");
+    let tui_mode = args.iter().any(|a| a == "--tui");
 
     // Load program
     let program = match fs::read(input_file) {
@@ -41,14 +43,22 @@ fn main() {
     cpu.load_program(&program);
     cpu.set_trace(trace);
 
-    println!("Sampo Emulator - Loaded {} bytes", program.len());
-    println!("Starting execution at 0x{:04X}", cpu.get_pc());
-    println!();
-
-    if interactive {
-        run_interactive(&mut cpu);
+    if tui_mode {
+        // Run TUI mode
+        if let Err(e) = tui::run_tui(&mut cpu) {
+            eprintln!("TUI error: {}", e);
+            std::process::exit(1);
+        }
     } else {
-        run(&mut cpu);
+        println!("Sampo Emulator - Loaded {} bytes", program.len());
+        println!("Starting execution at 0x{:04X}", cpu.get_pc());
+        println!();
+
+        if interactive {
+            run_interactive(&mut cpu);
+        } else {
+            run(&mut cpu);
+        }
     }
 }
 
@@ -134,6 +144,17 @@ fn print_help() {
     println!();
     println!("Options:");
     println!("  -t, --trace       Trace execution");
-    println!("  -i, --interactive Interactive mode");
+    println!("  -i, --interactive Interactive CLI debugger");
+    println!("      --tui         TUI mode with graphical interface");
     println!("  -h, --help        Show this help message");
+    println!();
+    println!("TUI Controls:");
+    println!("  F5          Run continuously");
+    println!("  F6          Step one instruction");
+    println!("  F7          Pause execution");
+    println!("  F8          Reset CPU");
+    println!("  F9/F10      Memory view up/down (16 bytes)");
+    println!("  PgUp/PgDn   Memory view up/down (256 bytes)");
+    println!("  Alt+=/Alt+- Adjust emulation speed");
+    println!("  F12         Quit");
 }

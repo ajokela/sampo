@@ -5,12 +5,12 @@ use std::io::{self, Write};
 const MEM_SIZE: usize = 65536; // 64KB
 
 // Flag bits
-const FLAG_N: u8 = 0x80; // Negative
-const FLAG_Z: u8 = 0x40; // Zero
-const FLAG_C: u8 = 0x20; // Carry
-const FLAG_V: u8 = 0x10; // Overflow
-const FLAG_H: u8 = 0x08; // Half-carry (BCD)
-const FLAG_I: u8 = 0x04; // Interrupt enable
+pub const FLAG_N: u8 = 0x80; // Negative
+pub const FLAG_Z: u8 = 0x40; // Zero
+pub const FLAG_C: u8 = 0x20; // Carry
+pub const FLAG_V: u8 = 0x10; // Overflow
+pub const FLAG_H: u8 = 0x08; // Half-carry (BCD)
+pub const FLAG_I: u8 = 0x04; // Interrupt enable
 
 pub struct Cpu {
     // Registers
@@ -29,6 +29,7 @@ pub struct Cpu {
     halted: bool,
     trace: bool,
     cycles: u64,
+    quiet: bool, // Suppress direct stdout output (for TUI mode)
 
     // Serial output buffer
     serial_out: Vec<u8>,
@@ -46,6 +47,7 @@ impl Cpu {
             halted: false,
             trace: false,
             cycles: 0,
+            quiet: false,
             serial_out: Vec::new(),
         };
 
@@ -81,8 +83,66 @@ impl Cpu {
         self.trace = trace;
     }
 
+    pub fn set_quiet(&mut self, quiet: bool) {
+        self.quiet = quiet;
+    }
+
     pub fn get_pc(&self) -> u16 {
         self.pc
+    }
+
+    pub fn set_pc(&mut self, pc: u16) {
+        self.pc = pc;
+    }
+
+    pub fn get_flags(&self) -> u8 {
+        self.flags
+    }
+
+    pub fn get_register(&self, r: usize) -> u16 {
+        self.get_reg(r)
+    }
+
+    pub fn get_cycles(&self) -> u64 {
+        self.cycles
+    }
+
+    pub fn is_halted(&self) -> bool {
+        self.halted
+    }
+
+    pub fn reset(&mut self) {
+        self.regs = [0; 16];
+        self.regs_alt = [0; 8];
+        self.pc = 0x0100;
+        self.flags = 0;
+        self.halted = false;
+        self.cycles = 0;
+        self.serial_out.clear();
+        self.regs[2] = 0xFFFE;
+        self.ports[0x80] = 0x02;
+    }
+
+    pub fn read_memory(&self, addr: u16) -> u8 {
+        self.memory[addr as usize]
+    }
+
+    pub fn get_serial_output(&self) -> &[u8] {
+        &self.serial_out
+    }
+
+    pub fn clear_serial_output(&mut self) {
+        self.serial_out.clear();
+    }
+
+    pub fn send_key(&mut self, key: u8) {
+        // Queue input for serial port
+        self.ports[0x81] = key;
+        self.ports[0x80] |= 0x01; // RX ready
+    }
+
+    pub fn get_sp(&self) -> u16 {
+        self.regs[2]
     }
 
     pub fn step(&mut self) -> Result<bool, String> {
@@ -834,8 +894,10 @@ impl Cpu {
             0x81 => {
                 // ACIA data - output character
                 self.serial_out.push(val);
-                print!("{}", val as char);
-                io::stdout().flush().ok();
+                if !self.quiet {
+                    print!("{}", val as char);
+                    io::stdout().flush().ok();
+                }
             }
             _ => {
                 self.ports[port as usize] = val;
