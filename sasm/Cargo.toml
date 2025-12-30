@@ -1,0 +1,7 @@
+[package]
+name = "sasm"
+version = "0.1.0"
+edition = "2021"
+description = "Sampo CPU Assembler"
+
+[dependencies]
